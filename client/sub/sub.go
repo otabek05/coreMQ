@@ -10,7 +10,7 @@ import (
 
 func main() {
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker("tcp://localhost:1883")
+	opts.AddBroker("tcp://localhost:8883")
 	opts.SetClientID("sub-client")
 	opts.SetCleanSession(true)
 
@@ -25,11 +25,14 @@ func main() {
 	opts.OnConnect = func(c mqtt.Client) {
 		log.Println("Connected (subscriber)")
 
-		if token := c.Subscribe("test/topic", 0, nil); token.Wait() && token.Error() != nil {
+		token := c.Subscribe("test/#", 0, nil)
+		token.Wait()
+		if token.Error() != nil {
 			log.Println("Subscribe failed:", token.Error())
-		} else {
-			log.Println("Subscribed to test/topic")
+			return
 		}
+
+		log.Println("Subscribed to test/topic")
 	}
 
 	opts.OnConnectionLost = func(c mqtt.Client, err error) {
@@ -37,7 +40,6 @@ func main() {
 	}
 
 	mqtt.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
-	// mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
 
 	client := mqtt.NewClient(opts)
 
@@ -45,8 +47,5 @@ func main() {
 		log.Fatal(token.Error())
 	}
 
-	
-	log.Println("Subscribed to test/topic")
-
-	select {} // block forever
+	select {}
 }
